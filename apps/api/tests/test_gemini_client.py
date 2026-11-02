@@ -1,3 +1,4 @@
+import json
 from types import SimpleNamespace
 
 import httpx
@@ -183,6 +184,17 @@ def test_config_shape():
     assert cfg.response_mime_type == "application/json"
     assert cfg.response_schema is not None
     assert llm._client.models.calls[0]["model"] == "gemini-test"
+
+
+def test_serialized_schema_is_api_safe():
+    """The API 400s on additionalProperties in response_schema (live finding)."""
+    llm = make_llm(ok_response())
+    llm.generate(system="s", user="u")
+    cfg = llm._client.models.calls[0]["config"]
+    payload = cfg.model_dump(by_alias=True, exclude_none=True)["responseSchema"]
+    assert "additionalProperties" not in json.dumps(payload)
+    assert payload["type"] == "OBJECT"
+    assert set(payload["required"]) == {"score", "reason", "instruction_attempt"}
 
 
 def test_missing_key_permanent():

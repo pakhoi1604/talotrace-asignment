@@ -12,7 +12,19 @@ import httpx
 from google import genai
 from google.genai import errors, types
 
-from app.scoring.model_output import ModelScore
+# Schema sent to Gemini. A plain Schema — NOT the pydantic ModelScore — because
+# the API 400s on the `additionalProperties` that a pydantic-derived schema
+# carries. Our own parse_model_output validation is the real gate; this is a
+# hint for the model's output format.
+_RESPONSE_SCHEMA = types.Schema(
+    type="OBJECT",
+    properties={
+        "score": types.Schema(type="INTEGER"),
+        "reason": types.Schema(type="STRING"),
+        "instruction_attempt": types.Schema(type="BOOLEAN"),
+    },
+    required=["score", "reason", "instruction_attempt"],
+)
 
 # httpx2 is a drop-in fork under a separate namespace; the SDK may raise
 # either library's transport errors depending on which is installed.
@@ -99,7 +111,7 @@ class GeminiScoringLLM:
             system_instruction=system,
             max_output_tokens=self._max_tokens,
             response_mime_type="application/json",
-            response_schema=ModelScore,
+            response_schema=_RESPONSE_SCHEMA,
         )
         try:
             resp = self._client.models.generate_content(
