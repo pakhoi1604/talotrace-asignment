@@ -25,6 +25,17 @@ See `docs/api-doc.md` (single source of truth).
 4. Identical content is a no-op replay (`200`, same receipt, nothing written), which also makes retries and double-clicks safe. If two different submissions race, the partial unique index forces the loser into `409 please retry` — never two current answers.
 5. The scoring worker (later plan) picks up `queued` jobs, calls Gemini, writes the score the candidate API never exposes.
 
+## Frontend
+
+Next.js App Router in `apps/web`. The candidate interview page `/i/[token]` is a
+client component that calls `/api/candidate/*` same-origin (the `next.config.ts`
+rewrite proxies to FastAPI); the token lives in the URL path and the
+`Authorization` header only, and `/i/*` responses carry `Referrer-Policy:
+no-referrer` + `X-Robots-Tag: noindex`. All design tokens (colors, radii,
+shadows, type scale, containers) live in `globals.css` — see
+`docs/design-guidelines.md`. Typed drafts persist in `localStorage` per
+candidate+question until submit.
+
 ## What we chose not to build
 
 From the brief's "Optional extras", excluded on purpose:
@@ -35,4 +46,6 @@ From the brief's "Optional extras", excluded on purpose:
 - Ordered candidate list
 - Consent screen / mic check
 - Candidate error + retry UX
+- Previous-question navigation (the API only returns the current question)
+- In-browser mic recording
 - Deployed demo

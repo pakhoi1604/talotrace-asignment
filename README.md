@@ -56,6 +56,14 @@ as `Authorization: Bearer <token>`.
 Re-running is idempotent for data (same counts, no duplicates) but **rotates
 every token** — previous links stop working (`401`). Intended.
 
+## Candidate interview
+
+`make seed` prints each candidate's personal link (`/i/<token>`) and saves them
+to `apps/api/data/candidate-links.csv`. Open one in a browser: the page shows
+the current question, accepts a typed answer (draft autosaves on the device) or
+an audio upload, and resumes where the candidate left off on reload. Invitation
+emails are **mocked** — the links only exist via `make seed`.
+
 ## Mocks
 
 Anything not wired to a real service is labelled "mock" in the UI and docs
