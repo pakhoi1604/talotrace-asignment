@@ -53,7 +53,7 @@ export function AnswerForm({
 
   return (
     <div className="flex flex-col gap-5">
-      <Tabs value={tab} onValueChange={setTab}>
+      <Tabs value={tab} onValueChange={setTab} className="gap-5">
         <TabsList
           aria-label="Answer type"
           className="h-auto gap-1 self-start p-1"
