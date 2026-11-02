@@ -1,12 +1,12 @@
 ---
 title: "Candidate API + DB schema + make seed"
 description: "Candidate-side data model, token-link auth, answer submission API (text + audio) with latest-wins versioning and in-transaction job enqueue, and a `make seed` command that loads the data pack and prints access links."
-status: pending
+status: done
 priority: P1
-branch: main
-tags: [backend, database, candidate, seed]
+branch: feat/candidate-api-db-seed
+tags: [backend, database, candidate, seed, tdd]
 blockedBy: [261102-1451-monorepo-skeleton]
-blocks: []
+blocks: [261102-1529-design-tokens-candidate-interview-fe, 261102-1531-hr-review-api]
 created: 2026-11-02
 ---
 
@@ -32,23 +32,26 @@ Backend-only slice: a candidate opens a personal link, gets the current question
 ## Phases
 | # | Phase | Status | Depends |
 |---|---|---|---|
-| 1 | [Data model + migration](phase-01-data-model-and-migration.md) | pending | none |
-| 2 | [Answer submission service](phase-02-answer-submission-service.md) | pending | 1 |
-| 3 | [Candidate API endpoints + contract docs](phase-03-candidate-api-endpoints-and-docs.md) | pending | 2 |
-| 4 | [Seed command + `make seed`](phase-04-seed-command-and-make-target.md) | pending | 2 |
+| 1 | [Write failing tests first](phase-01-write-failing-tests-first.md) | done | none |
+| 2 | [Data model + migration](phase-02-data-model-and-migration.md) | done | 1 |
+| 3 | [Answer submission service](phase-03-answer-submission-service.md) | done | 2 |
+| 4 | [Candidate API endpoints + contract docs](phase-04-candidate-api-endpoints-and-docs.md) | done | 3 |
+| 5 | [Seed command + `make seed`](phase-05-seed-command-and-make-target.md) | done | 3 |
 
-Phases 3 and 4 are independent once 2 is done.
+**Test-first (user decision):** phase 1 writes the whole suite against the contracts in phases 2–5 and leaves it red. Each later phase is done when its suites go green **without weakening tests**. Phases 4 and 5 are independent once 3 is done.
 
 ## Acceptance criteria
-- [ ] `make setup && make seed` on a clean checkout: 5 roles, 6 questions, 18 candidates, 35 answers (34 current, A022 superseded), 35 jobs (34 `queued`, 1 `superseded`); 18 links printed and written to `apps/api/data/candidate-links.csv`
-- [ ] Rerun `make seed`: same row counts, new tokens, old tokens → 401
-- [ ] `GET /api/candidate/interview` with a seeded link returns role, progress and the current question; missing/bad token → 401
-- [ ] Same `PUT` twice → one answer row, one job row, identical receipt (`200` on replay)
-- [ ] Different content on answered question → new current answer, old one superseded + its job `superseded`
-- [ ] Audio upload stored on disk under `UPLOAD_DIR`, answer `kind=audio`, job `queued`; bad type 415, oversize 413
-- [ ] No candidate response contains `score`, `rubric`, `job`, or another candidate's data (recursive key test)
-- [ ] `docs/api-doc.md`, `apps/web/src/lib/api-types.ts`, `docs/architecture.md` (data model), README + AGENTS.md (`make seed`) updated
-- [ ] `make lint && make test` green; `uv run alembic check` clean
+- [x] `make setup && make seed` on a clean checkout: 5 roles, 6 questions, 18 candidates, 35 answers (34 current, A022 superseded), 35 jobs (34 `queued`, 1 `superseded`); 18 links printed and written to `apps/api/data/candidate-links.csv`
+- [x] Rerun `make seed`: same row counts, new tokens, old tokens → 401
+- [x] `GET /api/candidate/interview` with a seeded link returns role, progress and the current question; missing/bad token → 401
+- [x] Same `PUT` twice → one answer row, one job row, identical receipt (`200` on replay)
+- [x] Different content on answered question → new current answer, old one superseded + its job `superseded`
+- [x] Audio upload stored on disk under `UPLOAD_DIR`, answer `kind=audio`, job `queued`; bad type 415, oversize 413
+- [x] No candidate response contains `score`, `rubric`, `job`, or another candidate's data (recursive key test)
+- [x] `docs/api-doc.md`: each candidate endpoint documents Auth, Request (field table + example), **every success code with a JSON example**, and an **Errors table listing every status code with its exact `detail`**; enforced by `test_api_doc_coverage.py`
+- [x] All errors use `{ "detail": string }`, 422 included (custom validation handler)
+- [x] `apps/web/src/lib/api-types.ts`, `docs/architecture.md` (data model), README + AGENTS.md (`make seed`) updated
+- [x] `make lint && make test` green; `uv run alembic check` clean
 
 ## Out of scope
 Scoring worker + LLM · HR auth/endpoints · overrides · candidate frontend pages · transcription · token expiry · real email (links printed = labelled **MOCK email**) · demo candidates · `make reset-db`.

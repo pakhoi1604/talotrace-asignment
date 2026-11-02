@@ -1,4 +1,4 @@
-.PHONY: setup dev lint format test migrate migration
+.PHONY: setup dev lint format test migrate migration seed
 
 setup:
 	cd apps/api && uv sync && ([ -f .env ] || cp .env.example .env) && uv run alembic upgrade head
@@ -27,3 +27,6 @@ migrate:
 # The only way to create migrations: edit models, then `make migration m="..."`.
 migration:
 	cd apps/api && uv run alembic revision --autogenerate -m "$(m)"
+
+seed: migrate
+	cd apps/api && uv run python -m app.seed

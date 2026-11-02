@@ -20,6 +20,7 @@ HR interview-scoring take-home app. Candidates answer screening questions via a 
 | `make format` | ruff format + fix (api), biome --write (web) |
 | `make test` | pytest (api) |
 | `make migrate` | `cd apps/api && uv run alembic upgrade head` |
+| `make seed` | Load `business-systems-pack/` into the DB, rotate candidate tokens, print + save access links (MOCK email) |
 | `make migration m="..."` | Autogenerate a migration (the only way to create one) |
 
 Per-app: `cd apps/api && uv run <cmd>` (pytest, ruff, alembic, uvicorn); `cd apps/web && pnpm <script>` (dev, lint, typecheck, build).
@@ -34,6 +35,8 @@ Per-app: `cd apps/api && uv run <cmd>` (pytest, ruff, alembic, uvicorn); `cd app
 6. **Scope**: brief "Optional extras" are out of scope unless the user asks.
 7. **Gates before done**: `make lint && make test` green.
 8. **Backend is test-first**: when working on `apps/api`, write the failing test first, then implement. Verify the test fails before writing the code, and passes after.
+9. **FE theme tokens**: do not change global theme/design tokens (CSS variables in `globals.css`, Tailwind theme config, shared color/spacing scales) unless the user explicitly asks.
+10. **Cook workflow**: when cooking a task, create a new workspace (git worktree) checked out from `main` on a `feat/<task>` or `bug/<task>` branch. Do all work there, then commit and push, then remove the workspace.
 
 ## Conventions
 

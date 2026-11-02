@@ -38,6 +38,24 @@ SQLite at `apps/api/data/app.db` (gitignored). Never hand-write migrations — e
 SQLAlchemy models, then `make migration m="what changed"`, review the generated
 file, and `make migrate`.
 
+## Seed data
+
+```sh
+make seed
+```
+
+Loads `business-systems-pack/` (5 roles, 6 questions, 18 candidates, 35 answers
+incl. 5 audio files) into SQLite and queues a scoring job per answer. Audio is
+copied to `apps/api/uploads/` (gitignored).
+
+**MOCK EMAIL:** instead of emailing candidates, the command prints each
+candidate's access link and writes them to `apps/api/data/candidate-links.csv`
+(gitignored). Links look like `http://localhost:3000/i/<token>` — send the token
+as `Authorization: Bearer <token>`.
+
+Re-running is idempotent for data (same counts, no duplicates) but **rotates
+every token** — previous links stop working (`401`). Intended.
+
 ## Mocks
 
 Anything not wired to a real service is labelled "mock" in the UI and docs
