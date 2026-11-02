@@ -1,4 +1,4 @@
-.PHONY: setup dev lint format test migrate migration seed
+.PHONY: setup dev lint format test migrate migration seed worker
 
 setup:
 	cd apps/api && uv sync && ([ -f .env ] || cp .env.example .env) && uv run alembic upgrade head
@@ -7,8 +7,12 @@ setup:
 dev:
 	@trap 'kill 0' INT TERM; \
 	(cd apps/api && uv run uvicorn app.main:app --reload --port 8000) & \
+	(cd apps/api && uv run python -m app.worker) & \
 	(cd apps/web && pnpm dev) & \
 	wait
+
+worker:
+	cd apps/api && uv run python -m app.worker
 
 lint:
 	cd apps/api && uv run ruff check . && uv run ruff format --check .

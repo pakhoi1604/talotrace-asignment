@@ -80,6 +80,22 @@ def answer_one(db, candidate, question_id: str, text: str | None = None) -> Answ
     ).answer
 
 
+def make_text_answer(db, candidate, question_id: str, text: str) -> Answer:
+    """Attach a text answer + queued job, skipping order/closed rules."""
+    from app.models.enums import AnswerKind
+    from app.services.answer_submission import record_answer, text_sha256
+
+    return record_answer(
+        db,
+        candidate,
+        question_id,
+        kind=AnswerKind.TEXT,
+        content_sha256=text_sha256(text),
+        text=text,
+        enforce_rules=False,
+    ).answer
+
+
 def set_job_result(
     db,
     answer,

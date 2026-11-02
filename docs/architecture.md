@@ -41,14 +41,52 @@ Newest `score_decisions` row → `"hr"`; else the suggestion of a `scored` job �
 2. `record_answer` writes the answer and a `queued` scoring job in **one transaction** — an answer always has exactly one job.
 3. Latest wins: resubmitting different content sets `superseded_at` on the old answer and `superseded` on its job — whatever status that job had. **The worker must re-check that its job is still `running` and the answer is still current before writing a score.**
 4. Identical content is a no-op replay (`200`, same receipt, nothing written), which also makes retries and double-clicks safe. If two different submissions race, the partial unique index forces the loser into `409 please retry` — never two current answers.
-5. The scoring worker (later plan) picks up `queued` jobs, calls Gemini, writes the score the candidate API never exposes.
+5. The scoring worker (`python -m app.worker`, started by `make dev`) claims `queued` jobs, routes audio/blank/injection-suspect answers to `needs_person` without a model call, otherwise calls Gemini, validates the output, and writes the score through a fenced update. The candidate API never exposes scores.
 6. HR overrides or accepts via `/api/hr/answers/{id}/{override,accept}` — appended to `score_decisions` after a fresh-state re-check inside the write transaction (supersede and suggestion-vanish races can't store a stale decision). `retry` conditionally re-queues only `failed` jobs (double click → 200 no-op).
 
-## Worker contract (for the scoring-worker plan)
+## Scoring worker
 
-- Claim with `UPDATE … WHERE status='queued'`; write results only `WHERE status='running'` and only after calling `validate_job_result`.
-- Write **every** score column on each outcome; on failure clear them all in the same statement.
-- Re-check the answer is still current before writing a score (step 3 above).
+Separate process (`python -m app.worker`, `make worker`; `make dev` runs it alongside api + web). `scoring_jobs` is the durable queue; there are no new endpoints.
+
+### Job state machine
+
+```
+queued ──claim (attempts+1)──▶ running ──▶ scored        (score 1–4 + reason + model)
+   ▲                             │  ├────▶ needs_person  (audio | blank | pre-scan | model flag | refusal)
+   │                             │  └────▶ failed        (calls used up | permanent | unexpected | claims ≥ max)
+   ├──── 429 (claim refunded) ───┤                          └──HR retry (attempts=0)──▶ queued
+   └──── lease expired ──────────┘
+any status ──candidate resubmits──▶ superseded (worker write discarded by the fence)
+```
+
+One `run_once` pass: recover stale jobs → claim → no-LLM routes → prompt → Gemini → validate → fenced write.
+
+### Scorer reliability
+
+- **Validation before storage**: the model's JSON must be a strict `{"score": int 1–4, "reason": 1–2000 chars, "instruction_attempt": bool}` with no extra keys — invalid output is a transient retry, never a stored score. `ScoringOutcome` re-runs `validate_job_result`, so an invalid result can't be constructed.
+- **Error taxonomy**: transient (timeout, network, 5xx, `MAX_TOKENS`, invalid output) retries in-run with 2s/4s backoff through the call throttle; permanent (400/401/403/404, missing key) fails the job at once with a clear `last_error` — a bad key fails jobs one by one, HR retries each (user decision); `RateLimited` (429) requeues with the claim refunded and pauses the worker by `retryDelay` (cap 300s); a refusal finish/block reason → `needs_person`; any other exception fails that job and the loop keeps going — the worker never dies on one job.
+- **`attempts` = claims**, and the claim number is the **fence token**: every heartbeat/result write is `UPDATE … WHERE id AND status='running' AND attempts=claim_no`, so a stale worker can't overwrite a newer claim and a superseded job discards the late result.
+- **Lease recovery**: `running` with `updated_at` older than 120s is requeued (or `failed` at ≥3 claims — "worker stopped mid-job"), so a crash or a poison job can't strand work. Each LLM call heartbeats first; the worst gap (~38s) is well under the lease.
+- **No transaction spans an LLM call**: the read transaction commits before `score_answer`; every queue write is its own short Core UPDATE + commit (ORM events are bypassed — safe because `ScoringOutcome` already ran the result invariants and every outcome writes all score columns).
+- **Signals**: first SIGINT/SIGTERM finishes the in-flight call, writes, exits; a second exits at once (the lease recovers the job). Ctrl-C under `make dev` leaves no orphan.
+
+### Prompt injection defence
+
+An answer that tries to instruct the scorer must not be able to buy a score. The layers:
+
+1. **Cf strip** (`clean_text`: NFKC + drop format chars) — zero-width/bidi/tag tricks are removed before anything reads the text, and it's the same text the model and HR see.
+2. **Deterministic pre-scan** — regexes that name the scorer, the rules or an explicit top score, plus any tag/bidi char. A match → `needs_person` with a neutral reason + quoted snippet, **no LLM call, no suggestion** (user decision: a human reads it, the attack can't win a score).
+3. **Prompt fencing** — the answer goes in `<answer-{nonce}>` tags as untrusted data in `user`; the rubric and rules live only in the system instruction; forged fence tags in the text are neutralised.
+4. **Strict output schema** + a narrowed `instruction_attempt` flag (only "asks for a score" or "change the rules" — greetings are not instructions). A flag → `needs_person`, no score.
+5. **HR has the final say** — `needs_person` carries no suggestion to accept; only an override with a reason counts.
+
+The false-positive trade-off is deliberate: an honest answer caught by the pre-scan costs one human read with a neutral reason — never a wrong score. The suite holds ~27 realistic negative sentences plus a data-pack regression (only A019 is flagged), and `pytest -m live` evals paraphrased attacks against the real model. **This defence is tested against known attacks — it is not a guarantee.** Paraphrases and non-English attacks can get past the pre-scan; the fence, flag and HR override are the backstop.
+
+### What the worker is not
+
+- **Missing `GEMINI_API_KEY`** → exits code 2 at startup with a loud stderr banner; jobs stay `queued`; api + web keep running.
+- **A wrong key or model name** → each job `failed` with a clear `last_error`. Fix `.env`, restart the worker, retry in HR.
+- **Dead under `make dev`** → not restarted (no supervisor loop); the banner makes it visible.
 
 ## Frontend
 
@@ -75,6 +113,11 @@ From the brief's "Optional extras", excluded on purpose:
 - In-browser mic recording
 - Deployed demo
 - Rate limiting on HR sign-in, CSRF tokens, multi-user HR/roles, session sweeping, a "Load data pack" button (use `make seed`), and a tighter candidate upload content-type allow-list (the HR audio route already ignores the stored type)
+- Audio transcription (audio answers go to HR as `needs_person`, labelled)
+- Bulk job retry; a persisted retry schedule
+- Multi-worker tuning (the claim/fence protocol is already safe for >1 worker)
+- Prompt version tracking; a second LLM call for injection detection
+- Non-English / confusable-letter pre-scan patterns
 
 ## API endpoints
 

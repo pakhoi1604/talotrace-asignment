@@ -20,6 +20,7 @@ HR interview-scoring take-home app. Candidates answer screening questions via a 
 | `make format` | ruff format + fix (api), biome --write (web) |
 | `make test` | pytest (api) |
 | `make migrate` | `cd apps/api && uv run alembic upgrade head` |
+| `make worker` | Run the scoring worker alone (`python -m app.worker`); `make dev` already starts it |
 | `make seed` | Load `business-systems-pack/` into the DB, rotate candidate tokens, print + save access links (MOCK email) |
 | `make migration m="..."` | Autogenerate a migration (the only way to create one) |
 
