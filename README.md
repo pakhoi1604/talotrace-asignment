@@ -64,6 +64,15 @@ the current question, accepts a typed answer (draft autosaves on the device) or
 an audio upload, and resumes where the candidate left off on reload. Invitation
 emails are **mocked** — the links only exist via `make seed`.
 
+## HR sign-in (MOCK)
+
+The HR area uses a **mock sign-in**: a single account from `HR_EMAIL`/`HR_PASSWORD`
+in `apps/api/.env` (defaults in `.env.example` are live after `make setup` — change
+them for any shared setup). Sign in via `POST /api/hr/session`, which sets an
+httpOnly `hr_session` cookie used by every `/api/hr/*` route. Changing the
+credentials signs everyone out. Existing `apps/api/.env` files need the new
+`HR_*` vars copied from `.env.example`.
+
 ## Mocks
 
 Anything not wired to a real service is labelled "mock" in the UI and docs

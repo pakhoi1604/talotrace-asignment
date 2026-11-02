@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # apps/api root — relative settings paths resolve against this, not the CWD.
@@ -23,6 +24,19 @@ class Settings(BaseSettings):
     # Resolved relative to apps/api when not absolute.
     DATA_PACK_DIR: str = "../../business-systems-pack"
     WEB_BASE_URL: str = "http://localhost:3000"
+    # MOCK sign-in: the single HR account.
+    HR_EMAIL: str | None = None
+    HR_PASSWORD: str | None = None
+    HR_SESSION_TTL_HOURS: int = 12
+    HR_COOKIE_SECURE: bool = False
+
+    @field_validator("HR_EMAIL", "HR_PASSWORD", mode="before")
+    @classmethod
+    def _blank_means_unset(cls, value):
+        # HR_PASSWORD= in .env means "not configured", not an empty password.
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
 
 @lru_cache

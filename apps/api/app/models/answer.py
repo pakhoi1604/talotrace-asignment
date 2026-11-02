@@ -17,6 +17,7 @@ from app.db.base import Base
 if TYPE_CHECKING:
     from app.models.candidate import Candidate
     from app.models.question import Question
+    from app.models.score_decision import ScoreDecision
     from app.models.scoring_job import ScoringJob
 
 
@@ -54,3 +55,7 @@ class Answer(Base):
     candidate: Mapped["Candidate"] = relationship(back_populates="answers")
     question: Mapped["Question"] = relationship()
     job: Mapped["ScoringJob | None"] = relationship(back_populates="answer", uselist=False)
+    # Newest first; decisions are append-only.
+    decisions: Mapped[list["ScoreDecision"]] = relationship(
+        back_populates="answer", order_by="desc(ScoreDecision.sequence)"
+    )

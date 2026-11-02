@@ -276,7 +276,11 @@ def test_candidate_responses_never_leak_grades_or_hr_data(candidate_client, sess
     # give the answer a job in a non-queued state to tempt leaks
     _put_text(client, token, "Q1", "first")
     job = db.query(ScoringJob).one()
+    # A real suggested score must not leak either. (Job invariants now
+    # require score+reason on a scored job.)
     job.status = JobStatus.SCORED
+    job.suggested_score = 2
+    job.suggested_reason = "borderline"
     db.commit()
     db.close()
 
