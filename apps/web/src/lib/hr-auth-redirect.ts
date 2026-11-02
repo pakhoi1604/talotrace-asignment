@@ -11,7 +11,13 @@ import { ApiRequestError } from "@/lib/api-client";
 
 /** Only paths under /hr/ are allowed as sign-in `next` targets (no open redirect). */
 export function safeNext(raw: string | null): string {
-  if (raw?.startsWith("/hr/") && !raw.startsWith("//")) return raw;
+  if (
+    raw?.startsWith("/hr/") &&
+    !raw.startsWith("//") &&
+    !raw.includes("..") &&
+    !raw.includes("\\")
+  )
+    return raw;
   return "/hr";
 }
 

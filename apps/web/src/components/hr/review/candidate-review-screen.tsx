@@ -5,21 +5,18 @@
 // per-card error map, and the accept / retry / override action handlers.
 // A 409 shows the friendly copy and refetches; a 401 redirects to sign-in.
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { CandidateSummaryCard } from "@/components/hr/review/candidate-summary-card";
 import type { OverrideDraft } from "@/components/hr/review/override-form";
 import { QuestionReviewCard } from "@/components/hr/review/question-review-card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  ReviewLoadError,
+  ReviewNotFound,
+  ReviewSkeleton,
+} from "@/components/hr/review/review-load-states";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useHrResource } from "@/hooks/use-hr-resource";
 import { ApiRequestError } from "@/lib/api-client";
 import type { AnswerReview } from "@/lib/api-types";
@@ -113,54 +110,19 @@ export function CandidateReviewScreen() {
     });
   }
 
-  if (review.status === 404) {
-    return (
-      <Card className="mx-auto mt-16 w-full max-w-md">
-        <CardHeader>
-          <CardTitle>This candidate doesn't exist</CardTitle>
-          <CardDescription>
-            They may have been removed.{" "}
-            <Link
-              href="/hr"
-              className="text-primary-strong hover:text-primary-deep"
-            >
-              Back to open roles
-            </Link>
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
+  if (review.status === 404 && !review.data) return <ReviewNotFound />;
 
-  if (review.error) {
+  // Failed initial load → full-page error; failed Refresh → banner only, the
+  // loaded review (and any open override draft) stays on screen.
+  if (review.error && !review.data)
     return (
-      <Alert variant="destructive" className="mt-8">
-        <AlertTitle>Couldn't load the review</AlertTitle>
-        <AlertDescription>
-          {review.error}
-          <Button
-            variant="secondary"
-            size="sm"
-            className="ml-3"
-            onClick={() => void review.reload()}
-          >
-            Retry
-          </Button>
-        </AlertDescription>
-      </Alert>
+      <ReviewLoadError
+        error={review.error}
+        onRetry={() => void review.reload()}
+      />
     );
-  }
 
-  if (review.loading || !review.data) {
-    return (
-      <div className="flex flex-col gap-5" aria-busy="true">
-        <div className="h-24 animate-pulse rounded-2xl bg-muted" />
-        {["q1", "q2", "q3"].map((k) => (
-          <div key={k} className="h-64 animate-pulse rounded-2xl bg-muted" />
-        ))}
-      </div>
-    );
-  }
+  if (review.loading || !review.data) return <ReviewSkeleton />;
 
   const data = review.data;
   const lastActivityAt = data.questions.reduce<string | null>(
@@ -173,6 +135,11 @@ export function CandidateReviewScreen() {
 
   return (
     <div className="flex flex-col gap-5">
+      {review.error && (
+        <Alert variant="destructive">
+          <AlertDescription>{review.error}</AlertDescription>
+        </Alert>
+      )}
       <CandidateSummaryCard
         review={data}
         lastActivityAt={lastActivityAt}
@@ -199,13 +166,13 @@ export function CandidateReviewScreen() {
             onDraftChange={(draft) =>
               answer && setDrafts((prev) => ({ ...prev, [answer.id]: draft }))
             }
-            onAccept={() =>
-              answer &&
-              panel.kind === "scored" &&
-              void runAction(answer.id, `accept:${answer.id}`, () =>
-                acceptScore(answer.id, panel.score),
-              )
-            }
+            onAccept={() => {
+              const score = panel.kind === "scored" ? panel.score : null;
+              if (answer && score !== null)
+                void runAction(answer.id, `accept:${answer.id}`, () =>
+                  acceptScore(answer.id, score),
+                );
+            }}
             onRetry={() => {
               const job = answer?.job;
               if (answer && job)

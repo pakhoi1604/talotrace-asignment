@@ -81,16 +81,20 @@ export function ScoreSidePanel({
     case "scored":
       return (
         <>
-          <ScoreFigure score={panel.score} label="suggested" />
+          {panel.score !== null && (
+            <ScoreFigure score={panel.score} label="suggested" />
+          )}
           <div className="flex flex-col gap-1.5">
             <span className={LBL}>Reason</span>
             <p className="m-0 text-foreground-body text-meta">{panel.reason}</p>
           </div>
           {!hideActions && (
             <div className="flex flex-wrap gap-2">
-              <Button size="lg" onClick={onAccept} disabled={pending}>
-                Accept {panel.score}
-              </Button>
+              {panel.score !== null && (
+                <Button size="lg" onClick={onAccept} disabled={pending}>
+                  Accept {panel.score}
+                </Button>
+              )}
               {overrideButton(false)}
             </div>
           )}

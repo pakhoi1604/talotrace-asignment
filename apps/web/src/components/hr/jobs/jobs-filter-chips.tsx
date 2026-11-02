@@ -17,14 +17,14 @@ export type JobFilter =
   | "superseded";
 
 export function jobCount(counts: JobCountsAll, filter: JobFilter): number {
+  // "All" excludes superseded — the unfiltered API response does too.
   if (filter === "all")
     return (
       counts.queued +
       counts.running +
       counts.scored +
       counts.failed +
-      counts.needs_person +
-      counts.superseded
+      counts.needs_person
     );
   if (filter === "queued") return counts.queued + counts.running;
   return counts[filter];

@@ -94,7 +94,7 @@ export function CandidateTable({
                       <div
                         className="h-full rounded-full bg-primary"
                         style={{
-                          width: `${(c.answered_count / totalQuestions) * 100}%`,
+                          width: `${totalQuestions > 0 ? (c.answered_count / totalQuestions) * 100 : 0}%`,
                         }}
                       />
                     </div>

@@ -50,6 +50,7 @@ export function OverrideForm({
   return (
     <form
       onSubmit={submit}
+      noValidate
       className="flex flex-col gap-3 rounded-lg border-primary-border bg-card p-4"
     >
       <span className="font-semibold text-body-sm">Override score</span>

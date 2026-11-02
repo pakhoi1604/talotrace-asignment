@@ -59,6 +59,7 @@ export function JobsScreen() {
   const [actionError, setActionError] = useState<string>();
 
   function setFilter(next: JobFilter) {
+    setActionError(undefined);
     router.replace(next === "all" ? pathname : `${pathname}?status=${next}`);
   }
 
@@ -102,7 +103,12 @@ export function JobsScreen() {
           <AlertDescription>{actionError}</AlertDescription>
         </Alert>
       )}
-      {jobs.error ? (
+      {jobs.error && jobs.data && (
+        <Alert variant="destructive">
+          <AlertDescription>{jobs.error}</AlertDescription>
+        </Alert>
+      )}
+      {jobs.error && !jobs.data ? (
         <Alert variant="destructive">
           <AlertTitle>Couldn't load jobs</AlertTitle>
           <AlertDescription>

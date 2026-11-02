@@ -30,7 +30,7 @@ export function RoleCandidatesScreen() {
   const rc = useHrResource(() => getRoleCandidates(roleId), [roleId]);
   const [sort, setSort] = useState<CandidateSort>("name");
 
-  if (rc.status === 404) {
+  if (rc.status === 404 && !rc.data) {
     return (
       <Card className="mx-auto mt-16 w-full max-w-md">
         <CardHeader>
@@ -49,7 +49,9 @@ export function RoleCandidatesScreen() {
     );
   }
 
-  if (rc.error) {
+  // A failed initial load gets the full-page error; a failed Refresh only
+  // banners — the old data stays visible (manual-refresh contract).
+  if (rc.error && !rc.data) {
     return (
       <Alert variant="destructive" className="mt-8">
         <AlertTitle>Couldn't load candidates</AlertTitle>
@@ -87,6 +89,11 @@ export function RoleCandidatesScreen() {
 
   return (
     <>
+      {rc.error && (
+        <Alert variant="destructive">
+          <AlertDescription>{rc.error}</AlertDescription>
+        </Alert>
+      )}
       <RoleHeader
         role={rc.data.role}
         roles={roles.data?.roles}

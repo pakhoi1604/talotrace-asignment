@@ -14,7 +14,12 @@ export type Panel =
       reason: string | null;
       job: JobView | null;
     }
-  | { kind: "scored"; score: number; reason: string; job: JobView | null }
+  | {
+      kind: "scored";
+      score: number | null;
+      reason: string;
+      job: JobView | null;
+    }
   | {
       kind: "needs_person";
       reason: string | null;
@@ -31,7 +36,10 @@ export function panelFor(answer: AnswerReview | null): Panel {
     return {
       kind: "decided",
       decision,
-      suggested: job?.suggested_score ?? null,
+      // Striking the suggestion only makes sense when HR replaced it (override);
+      // an accept confirms the same number — nothing to strike.
+      suggested:
+        decision.kind === "override" ? (job?.suggested_score ?? null) : null,
       reason: job?.suggested_reason ?? null,
       job,
     };
@@ -43,7 +51,7 @@ export function panelFor(answer: AnswerReview | null): Panel {
     case "scored":
       return {
         kind: "scored",
-        score: job.suggested_score ?? 0,
+        score: job.suggested_score,
         reason: job.suggested_reason ?? "",
         job,
       };
