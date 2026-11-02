@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 
+import { BrandMark } from "@/components/brand-mark";
 import { Badge } from "@/components/ui/badge";
 
 interface InterviewHeaderProps {
@@ -17,13 +18,7 @@ export function InterviewHeader({
     <header className="border-b bg-card">
       <div className="mx-auto flex max-w-interview flex-wrap items-center justify-between gap-3 px-6 py-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-sm bg-primary">
-            <Check
-              className="size-4.5 text-primary-foreground"
-              strokeWidth={2.4}
-              aria-hidden
-            />
-          </div>
+          <BrandMark size="sm" />
           <div className="flex flex-col">
             <span className="font-semibold text-body">{role} interview</span>
             <span className="text-meta text-muted-foreground">
