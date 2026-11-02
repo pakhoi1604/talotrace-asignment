@@ -36,9 +36,7 @@ def sign_in(
     raw = create_session(db, settings)
     # Fetch the row directly: find_session filters on expiry, which would
     # hide a session created with a misconfigured non-positive TTL.
-    session = db.scalar(
-        select(HrSession).where(HrSession.token_hash == _hash_token(raw))
-    )
+    session = db.scalar(select(HrSession).where(HrSession.token_hash == _hash_token(raw)))
     response.set_cookie(
         "hr_session",
         raw,

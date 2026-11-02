@@ -1,4 +1,11 @@
 import pytest
+from sqlalchemy import func, select, update
+from sqlalchemy.exc import IntegrityError
+
+from app.core.time import utcnow
+from app.models import Answer, ScoreDecision, ScoringJob
+from app.models.enums import DecisionKind, JobStatus
+from app.services import score_decisions
 from app.services.hr_review import final_score
 from app.services.score_decisions import (
     AnswerNotFound,
@@ -12,13 +19,6 @@ from app.services.score_decisions import (
     record_decision,
     retry_job,
 )
-from sqlalchemy import func, select, update
-from sqlalchemy.exc import IntegrityError
-
-from app.core.time import utcnow
-from app.models import Answer, ScoreDecision, ScoringJob
-from app.models.enums import DecisionKind, JobStatus
-from app.services import score_decisions
 
 from .factories import (
     answer_one,

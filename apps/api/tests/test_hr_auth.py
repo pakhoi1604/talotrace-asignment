@@ -1,13 +1,6 @@
 import hashlib
 from datetime import timedelta
 
-from app.services.hr_auth import (
-    create_session,
-    credential_fingerprint,
-    delete_session,
-    find_session,
-    verify_credentials,
-)
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
@@ -16,6 +9,13 @@ from app.core.time import utcnow
 from app.db.session import get_db
 from app.main import create_app
 from app.models import HrSession
+from app.services.hr_auth import (
+    create_session,
+    credential_fingerprint,
+    delete_session,
+    find_session,
+    verify_credentials,
+)
 
 
 def _settings(**overrides):
