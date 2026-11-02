@@ -103,3 +103,21 @@ Badge pill variants (`success` `warning` `danger` `info` `neutral`) = `{status}-
 - **Status chips**: `Badge` status variants above
 - **Buttons**: `Button size="xl"` = 48px primary CTA · `size="cta"` = 44px secondary · `variant="secondary"` = white + `primary-border` + `primary-strong` text
 - **Focus**: inputs/textarea use `border-primary` + `outline-2 outline-offset-1 outline-primary` (the design's focus rule); everything else keeps the ring
+
+## HR area
+
+Recipes for the `/hr` pages (mockups in `docs/design/hr *`).
+
+- **Shell**: header `bg-card border-b`, inner `max-w-app px-6 py-3.5`; brand = `BrandMark size="sm"` + `text-body-lg font-semibold`; right side `Badge warning` "Mock auth" + avatar `size-8 rounded-full bg-primary-subtle text-primary-strong`. Main `mx-auto max-w-app px-6 pt-8 pb-16 gap-6`.
+- **Nav**: idle `text-body-sm font-medium text-foreground-body px-3 py-2`; active `bg-primary-soft text-primary-strong font-semibold rounded-sm` + `aria-current="page"`. Needs-a-person count pill `bg-warning-subtle text-warning-ink`.
+- **Stat card**: `rounded-xl border bg-card px-5 py-4.5`; plain label `text-meta text-muted-foreground` or a `JobStatusChip`; number `text-display-sm font-bold`. Failed card `border-danger-border`, needs-a-person `border-warning-border`.
+- **Table**: section `rounded-2xl border bg-card overflow-hidden`; `th` `text-caption uppercase tracking-[.04em] text-muted-foreground bg-surface-subtle`; rows `border-b border-border-subtle`; `min-w-[880px]` inside `overflow-x-auto`. Avatar `size-9 rounded-full bg-primary-soft text-primary-strong`.
+- **Segmented control**: track `bg-muted p-1 rounded-md gap-1`; buttons `text-meta px-3 py-1.5 rounded-sm`; active `bg-card text-primary-strong font-semibold shadow-control`.
+- **Status chips**: `JobStatusChip` → scored `success` "Scored" · queued/running `neutral` "Queued" · failed `danger` "Failed" · needs_person `warning` "Needs a person" · superseded `neutral` "Replaced". HR decision `Badge info` "HR override"/"HR accepted". Counts render "{n} scored" style.
+- **Score figure**: `text-score font-bold` + `/ 4 {label}` meta; `tone="hr"` colors the number `text-primary-strong`; replaced suggestion struck through.
+- **Review card**: `article` `rounded-2xl border bg-card flex flex-wrap overflow-hidden`; answer `flex-[999_1_520px] p-6`; side `flex-[1_1_340px] p-6 bg-surface-subtle border-l`. Tones: failed → card `border-danger-border` + side `bg-danger-soft`; needs_person → `border-warning-border` + `bg-warning-soft`; override open → `border-primary-muted shadow-focus`.
+- **Override form**: `rounded-lg border-primary-border bg-card p-4`; score tiles `h-11 flex-1 rounded-tab border-input`; checked `border-2 border-primary bg-primary-soft text-primary-strong font-bold`; "(required)" marker `text-danger`.
+- **Sign-in**: brand panel `bg-primary-strong text-primary-foreground px-16 py-14`, `BrandMark size="lg" tone="inverse"`, icon bubbles `bg-primary-foreground/16`; form card `rounded-2xl border bg-card p-7 shadow-card-raised`; "Mocked sign-in" `Badge warning` + `border-warning-border-strong`.
+- **Empty states**: table body row `py-10 text-center text-muted-foreground`; missing role/candidate → `Card` "doesn't exist" + link to `/hr`.
+- **Colors**: token utilities only — never hex, `rgb(a)`, `hsl`, arbitrary color classes or inline color styles. The full artboard-hex → token map lives in `plans/261102-1606-hr-review-fe/phase-01-gate-and-hr-api-client-plumbing.md`; pick by role where one value maps to several tokens.
+- **Refresh**: `RefreshButton` = `Button variant="secondary" size="sm"` + spinning `RotateCw` + `aria-live` "Updated HH:MM". No timers.

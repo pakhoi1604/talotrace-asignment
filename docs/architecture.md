@@ -61,6 +61,20 @@ shadows, type scale, containers) live in `globals.css` — see
 `docs/design-guidelines.md`. Typed drafts persist in `localStorage` per
 candidate+question until submit.
 
+The HR area lives under `/hr`: `/hr/sign-in` (MOCK), `/hr` (redirects to the
+first role), `/hr/roles/[roleId]`, `/hr/candidates/[candidateId]` and
+`/hr/jobs?status=`. All HR pages are client components that call `/api/hr/*`
+same-origin through the rewrite, sending the httpOnly `hr_session` cookie;
+`cache: "no-store"` on every GET. `src/proxy.ts` (Next 16 proxy, the former
+middleware) redirects `/hr/*` to sign-in when the cookie is absent — presence
+only; permissions stay in the backend, and any 401 from an HR call redirects
+to `/hr/sign-in?next=` (`next` is validated to `/hr/*` only). Refresh is
+manual (a Refresh button, no timers/polling). The brand mark is shared as
+`src/components/brand-mark.tsx`; the candidate header is unchanged. HR routes
+are `noindex`. Not built on the frontend: "Read first" ordering, a "Load data
+pack" button, audio transcription (labelled "Transcription not built"), and
+the scorer-instruction highlight from the mockup (the API returns no span).
+
 ## What we chose not to build
 
 From the brief's "Optional extras", excluded on purpose:

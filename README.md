@@ -64,6 +64,15 @@ the current question, accepts a typed answer (draft autosaves on the device) or
 an audio upload, and resumes where the candidate left off on reload. Invitation
 emails are **mocked** — the links only exist via `make seed`.
 
+## HR area
+
+Open `http://localhost:3000/hr` and sign in with the **MOCK** account
+(`HR_EMAIL`/`HR_PASSWORD` from `apps/api/.env`). Pages: a role's candidate
+list with scoring-job counts, the per-answer review (suggested score + reason,
+accept / override-with-reason / retry failed jobs), and `/hr/jobs` for every
+scoring job including a "Needs a person" view. Data refresh is manual — press
+the Refresh button; there is no polling.
+
 ## HR sign-in (MOCK)
 
 The HR area uses a **mock sign-in**: a single account from `HR_EMAIL`/`HR_PASSWORD`
