@@ -56,6 +56,15 @@ as `Authorization: Bearer <token>`.
 Re-running is idempotent for data (same counts, no duplicates) but **rotates
 every token** — previous links stop working (`401`). Intended.
 
+## HR sign-in (MOCK)
+
+The HR area uses a **mock sign-in**: a single account from `HR_EMAIL`/`HR_PASSWORD`
+in `apps/api/.env` (defaults in `.env.example` are live after `make setup` — change
+them for any shared setup). Sign in via `POST /api/hr/session`, which sets an
+httpOnly `hr_session` cookie used by every `/api/hr/*` route. Changing the
+credentials signs everyone out. Existing `apps/api/.env` files need the new
+`HR_*` vars copied from `.env.example`.
+
 ## Mocks
 
 Anything not wired to a real service is labelled "mock" in the UI and docs

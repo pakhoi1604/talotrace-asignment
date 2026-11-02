@@ -1,7 +1,8 @@
-from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, field_validator
+
+from app.schemas.common import UtcDatetime
 
 
 class TextAnswerIn(BaseModel):
@@ -27,7 +28,7 @@ class AnsweredItem(BaseModel):
     question_id: str
     position: int
     kind: Literal["text", "audio"]
-    received_at: datetime
+    received_at: UtcDatetime
 
 
 class InterviewView(BaseModel):
@@ -44,5 +45,5 @@ class AnswerReceipt(BaseModel):
     answer_id: str
     question_id: str
     kind: Literal["text", "audio"]
-    received_at: datetime
+    received_at: UtcDatetime
     status: Literal["received"] = "received"

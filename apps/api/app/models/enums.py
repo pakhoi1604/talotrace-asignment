@@ -13,3 +13,8 @@ class JobStatus(StrEnum):
     FAILED = "failed"
     NEEDS_PERSON = "needs_person"
     SUPERSEDED = "superseded"
+
+
+class DecisionKind(StrEnum):
+    OVERRIDE = "override"
+    ACCEPT = "accept"
