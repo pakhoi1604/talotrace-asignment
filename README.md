@@ -105,7 +105,8 @@ Anything not wired to a real service is labelled "mock" in the UI and docs
 
 ## Docs
 
+- `ARCHITECTURE.md` — one-page architecture note (data model, endpoints, answer→score flow, not built)
 - `docs/api-doc.md` — API contract, **single source of truth**
-- `docs/architecture.md` — architecture notes
+- `docs/architecture.md` — detailed architecture notes
 - `AGENTS.md` — agent/dev rules
 - `business-systems-pack/` — take-home data (read-only)
