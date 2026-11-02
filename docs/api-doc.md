@@ -665,7 +665,7 @@ HR accepts the suggested score. Only valid on a `scored` job whose current sugge
 
 ### POST /api/hr/jobs/{job_id}/retry
 
-Re-queue a `failed` scoring job: status → `queued`, `attempts` → 0, `last_error` and all score columns cleared. Idempotent: a repeat (or concurrent double click) while already `queued` returns `200` unchanged. The worker plan picks queued jobs up; until then the job stays `queued`.
+Re-queue a `failed` scoring job: status → `queued`, `attempts` → 0, `last_error` and all score columns cleared. Idempotent: a repeat (or concurrent double click) while already `queued` returns `200` unchanged. The scoring worker picks `queued` jobs up on its next poll.
 
 **Auth:** `hr_session` cookie + `Content-Type: application/json`
 
@@ -711,3 +711,26 @@ Re-queue a `failed` scoring job: status → `queued`, `attempts` → 0, `last_er
 | 404 | `job_id` unknown | `job not found` |
 | 409 | Job is not `failed` and not already `queued` (e.g. `scored`, `running`, `needs_person`, `superseded`) | `only failed jobs can be retried` |
 | 415 | `Content-Type` is not `application/json` (incl. missing body) | `content type must be application/json` |
+
+---
+
+## Scoring job status reference
+
+`scoring_jobs` is the durable queue for the background scoring worker (`python -m app.worker`). These values appear on `GET /api/hr/jobs`, the candidate review, and the retry endpoint. No endpoint change.
+
+| status | meaning | score fields |
+|---|---|---|
+| `queued` | waiting for the worker (also after a rate-limit pause) | null |
+| `running` | worker is scoring it. `attempts` = number of worker runs (claims) | null |
+| `scored` | model suggestion validated and stored | `suggested_score` 1–4, `suggested_reason`, `model` |
+| `needs_person` | HR must read it — see `needs_person_reason`. No suggestion; HR overrides | null |
+| `failed` | gave up — see `last_error`. Never a low score. Retry via `POST /api/hr/jobs/{job_id}/retry` | null |
+| `superseded` | candidate replaced the answer | as left |
+
+`needs_person_reason` values:
+
+- `audio answer, not transcribed (transcription not built)`
+- `empty answer`
+- `answer appears to address the scorer, HR to read. Candidate text: "…"`
+- `model flagged instructions to the scorer`
+- `model declined to score: <REASON>`

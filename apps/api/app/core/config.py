@@ -29,6 +29,16 @@ class Settings(BaseSettings):
     HR_PASSWORD: str | None = None
     HR_SESSION_TTL_HOURS: int = 12
     HR_COOKIE_SECURE: bool = False
+    # Scorer + worker (see app/scoring, app/worker).
+    SCORER_MAX_CALLS: int = 3  # LLM calls per run
+    SCORER_TIMEOUT_SECONDS: float = 30
+    SCORER_BACKOFF_SECONDS: float = 2  # 2s, then 4s
+    SCORER_MAX_OUTPUT_TOKENS: int = 512
+    WORKER_MAX_CLAIMS: int = 3  # runs before a job is failed
+    WORKER_POLL_SECONDS: float = 2
+    WORKER_MIN_CALL_INTERVAL_SECONDS: float = 4
+    WORKER_LEASE_SECONDS: int = 120
+    WORKER_MAX_RATE_LIMIT_PAUSE_SECONDS: float = 300
 
     @field_validator("HR_EMAIL", "HR_PASSWORD", mode="before")
     @classmethod

@@ -15,21 +15,37 @@ Candidates answer screening questions via a token link; the system scores answer
 make setup
 ```
 
-Then put your `GEMINI_API_KEY` (from [Google AI Studio](https://aistudio.google.com/)) into `apps/api/.env`.
+Then put your `GEMINI_API_KEY` (from [Google AI Studio](https://aistudio.google.com/)) into `apps/api/.env`. **Required for scoring** — without it the worker exits with a clear message and jobs stay `queued`.
 
 ## Run
 
 ```sh
-make dev    # api on :8000, web on :3000 — Ctrl-C stops both
+make dev      # api on :8000, web on :3000, scoring worker — Ctrl-C stops all
+make worker   # the scoring worker alone (python -m app.worker)
 ```
 
 Open http://localhost:3000 — the home page shows live API + DB health.
+
+The worker scores `queued` jobs in the background: text answers get a suggested
+score; **audio answers are not transcribed (not built)** and go to HR as
+`needs_person`, as do blank answers and answers that appear to address the
+scorer. If jobs stay `queued`, check the worker output (a missing
+`GEMINI_API_KEY` exits at once). A wrong key or model name marks jobs `failed`
+with a clear error — fix `apps/api/.env`, restart the worker, then retry them
+in HR.
 
 ## Test & lint
 
 ```sh
 make lint
 make test
+```
+
+`make test` runs the API suite with a fake LLM — no network, and it ignores the
+key in `apps/api/.env`. For an opt-in check against real Gemini (~12 calls):
+
+```sh
+cd apps/api && uv run pytest -m live   # fails if GEMINI_API_KEY is not set
 ```
 
 ## Database

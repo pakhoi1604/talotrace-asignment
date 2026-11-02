@@ -88,3 +88,16 @@ def hr_client(client):
     resp = client.post("/api/hr/session", json={"email": "hr@test.local", "password": "pw"})
     assert resp.status_code == 200, resp.text
     return client
+
+
+# A developer's apps/api/.env must not leak into tests: a real key would make
+# the fake-LLM suites hit the network or skip. Live tests opt out via marker.
+@pytest.fixture(autouse=True)
+def _blank_gemini_key(request, monkeypatch):
+    if request.node.get_closest_marker("live"):
+        yield
+        return
+    monkeypatch.setenv("GEMINI_API_KEY", "")
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
